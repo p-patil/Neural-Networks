@@ -1,29 +1,74 @@
 #include <iostream>
 #include <fstream>
 #include <vector>
+#include <utility>
 #include "neural_network.h"
+
+#define LENGTH 28
+#define WIDTH 28
 
 using namespace std;
 
-vector<vector<char>> read_mnist(string);
+vector<vector<unsigned char>> read_mnist(string);
+vector<unsigned char> read_mnist_labels(string);
 int reverse_int(int);
 
 int main() {
-    NeuralNetwork net (3, 28 * 28, 30, 10);
-    vector<vector<char>> training_data = read_mnist("./mnist/train-images.idx3-ubyte");
+    NeuralNetwork net (3, LENGTH * WIDTH, 30, 10);
+    vector<vector<unsigned char>> training_data = read_mnist("./mnist/train-images.idx3-ubyte");
+    vector<unsigned char> training_labels = read_mnist_labels("./mnist/train-labels.idx1-ubyte");
 
-    for (vector<char> v : training_data) {
-        for (char c : v) {
-            if (((int) c) < 0 || ((int) c) > 255) {
-                cout << ((int) c) << endl;
-            }
+    vector<pair<vector<double>, vector<double>>> samples;
+    for (int i = 0; i < training_data.size(); ++i) {
+        vector<double> input, output;
+        
+        for (int j = 0; j < training_data[i].size(); ++j) {
+            input.push_back((double) training_data[i][j]);
         }
+
+        for (int j = 0; j < 10; ++j) {
+            output.push_back(0.0);
+        }
+        output[(int) training_labels[i]] = 1.0;
+
+        samples.push_back(make_pair(input, output));
     }
 
+    net.train(samples, 1, 1, 0.7, 0);
+
+    vector<vector<unsigned char>> test_data = read_mnist("./mnist/t10k-images.idx3-ubyte");
+    vector<unsigned char> test_labels = read_mnist_labels("./mnist/t10k-labels.idx1-ubyte");
+
+    int correct_count = 0;
+    int got;
+    double net_val;
+    for (int i = 0; i < test_data.size(); ++i) {
+       vector<double> input;
+       for (int j = 0; j < test_data[i].size(); ++j) {
+           input.push_back((double) test_data[i][j]);
+       }
+
+       vector<double> net_vector = net.feedforward(input);
+
+       got = 0;
+       net_val = net_vector[0];
+       for (int j = 1; j < net_vector.size(); ++j) {
+           if (net_vector[j] > net_val) {
+               got = j;
+               net_val = net_vector[j];
+           }
+       }
+
+       if (got == (int) test_labels[i]) {
+           ++correct_count;
+       }
+    }
+
+    cout << "Accuracy: " << (((double) correct_count) / test_data.size()) << endl;
     return 0;
 }
 
-vector<vector<char>> read_mnist(string path) {
+vector<vector<unsigned char>> read_mnist(string path) {
     ifstream file (path);
     
     if (file.is_open()) {
@@ -44,9 +89,9 @@ vector<vector<char>> read_mnist(string path) {
         file.read((char *) &n_cols, sizeof(n_cols));
         n_cols = reverse_int(n_cols);
         
-        vector<vector<char>> ret;
+        vector<vector<unsigned char>> ret;
         for (int i = 0; i < number_of_images; ++i) {
-            vector<char> image;
+            vector<unsigned char> image;
 
             for (int r = 0; r < n_rows; ++r) {
                 for (int c = 0; c < n_cols; ++c) {
@@ -61,6 +106,37 @@ vector<vector<char>> read_mnist(string path) {
         }
 
         return ret;
+    }
+}
+
+vector<unsigned char> read_mnist_labels(string full_path) {
+    ifstream file(full_path);
+
+    if (file.is_open()) {
+        int magic_number = 0;
+        int number_of_labels = 0;
+
+        file.read((char *) &magic_number, sizeof(magic_number));
+        magic_number = reverse_int(magic_number);
+
+        if (magic_number != 2049) {
+            throw runtime_error("Invalid MNIST label file!");
+        }
+
+        file.read((char *) &number_of_labels, sizeof(number_of_labels));
+        number_of_labels = reverse_int(number_of_labels);
+        
+        vector<unsigned char> dataset;
+        for(int i = 0; i < number_of_labels; ++i) {
+            unsigned char temp = 0;
+            file.read((char *) &temp, sizeof(temp));
+            
+            dataset.push_back(temp);    
+        }
+                                    
+        return dataset;
+    } else {
+        throw runtime_error("Unable to open file `" + full_path + "`!");    
     }
 }
 

@@ -344,12 +344,15 @@ ARRAY_2D NeuralNetwork::compute_bias_derivatives(const ARRAY_2D &deltas) const {
 ARRAY_3D  NeuralNetwork::update_weights(const ARRAY_3D &gradient, const ARRAY_3D &prev_deltas, double learning_rate, double momentum) {
         ARRAY_3D deltas (this->get_num_layers() - 1);
 	double weight, delta_weight;
+        cout << prev_deltas.size() << " " << (this->get_num_layers() - 1) << endl;
 	for (int i = 0; i < this->get_num_layers() - 1; ++i) {
                 deltas[i] = ARRAY_2D(this->get_layer_count(i));
 
+                cout << prev_deltas[i].size() << " " << this->get_layer_count(i) << endl;
 		for (int j = 0;  j < this->get_layer_count(i); ++j) {
                         deltas[i][j] = ARRAY(this->get_layer_count(i + 1));
 
+                        cout << prev_deltas[i][j].size() << " " << this->get_layer_count(i + 1) << endl;
 			for (int k = 0; k < this->get_layer_count(i + 1); ++k) {
 				weight = this->get_weight(i, j, k);
                                 delta_weight = - learning_rate * gradient[i][j][k] + prev_deltas[i][j][k] * momentum;
@@ -531,6 +534,7 @@ void NeuralNetwork::train(vector<pair<ARRAY, ARRAY>> samples, int num_epochs /* 
 
 	    	/* Update weights using gradient. */
 	    	prev_deltas = this->update_weights(avg_derivative, prev_deltas, learning_rate, momentum);
+                cout << "reached\n";
 	    	prev_bias_deltas = this->update_bias_weights(avg_bias_derivative, prev_bias_deltas, learning_rate, momentum);
 
                 /* If using an adaptive learning rate and momentum, compute the next iteration. By default the below two
