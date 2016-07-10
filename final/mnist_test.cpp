@@ -14,7 +14,12 @@ vector<unsigned char> read_mnist_labels(string);
 int reverse_int(int);
 
 int main() {
+    cout << "Initializing network... ";
+
     NeuralNetwork net (3, LENGTH * WIDTH, 30, 10);
+
+    cout << "Done.\nReading training data... ";
+
     vector<vector<unsigned char>> training_data = read_mnist("./mnist/train-images.idx3-ubyte");
     vector<unsigned char> training_labels = read_mnist_labels("./mnist/train-labels.idx1-ubyte");
 
@@ -34,7 +39,11 @@ int main() {
         samples.push_back(make_pair(input, output));
     }
 
-    net.train(samples, 1, 1, 0.7, 0);
+    cout << "Done.\nTraining... ";
+
+    net.train(samples, 30, 10, 0.5, 0);
+
+    cout << "Done.\nReading test data... ";
 
     vector<vector<unsigned char>> test_data = read_mnist("./mnist/t10k-images.idx3-ubyte");
     vector<unsigned char> test_labels = read_mnist_labels("./mnist/t10k-labels.idx1-ubyte");
@@ -64,7 +73,7 @@ int main() {
        }
     }
 
-    cout << "Accuracy: " << (((double) correct_count) / test_data.size()) << endl;
+    cout << "Done.\nAccuracy: " << (((double) correct_count) / test_data.size()) << endl;
     return 0;
 }
 

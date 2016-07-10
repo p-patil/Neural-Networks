@@ -211,22 +211,27 @@ NeuralNetwork::NeuralNetwork(int length, int *layer_counts, double ***weights, d
 	}
 }
 
-void NeuralNetwork::set_zero(ARRAY_2D &arr) {
+void NeuralNetwork::initialize_weight_deltas(ARRAY_2D &arr) {
+        arr = ARRAY_3D(this->get_num_layers() - 1);
 	for (int i = 0; i < arr.size(); ++i) {
+                arr = ARRAY_2D(this->get_layer_count(i));
 		for (int j = 0; j < arr[i].size(); ++j) {
-			arr[i][j] = 0.0;
+			arr[i][j] = ARRAY(this->get_layer_count(i + 1));
+                        for (int k = 0; k < arr[i][j].size(); ++k) {
+                            arr[i][j][k] = 0.0;
+                        }
 		}
 	}
 }
 
-void NeuralNetwork::set_zero(ARRAY_3D &arr) {
-	for (int i = 0; i < arr.size(); ++i) {
-		for (int j = 0; j < arr[i].size(); ++j) {
-			for (int k = 0; k < arr[i][j].size(); ++k) {
-				arr[i][j][k] = 0.0;
-			}
-		}
+void NeuralNetwork::initialize_bias_deltas(ARRAY_3D &arr) {
+    arr = ARRAY_2D(this->get_num_layers() - 1);
+    for (int i = 0; i < arr.size(); ++i) {
+        arr = ARRAY(this->get_layer_count(i + 1));
+	for (int j = 0; j < arr[i].size(); ++j) {
+            arr[i][j] = 0.0; 
 	}
+    }
 }
 
 void NeuralNetwork::add_arrays(ARRAY_2D &arr, const ARRAY_2D &summand) {
@@ -520,11 +525,13 @@ ARRAY_2D NeuralNetwork::feedforward_and_get_outputs(const ARRAY &inputs) const {
 /* Trains this neural network on the given data. */
 void NeuralNetwork::train(vector<pair<ARRAY, ARRAY>> samples, int num_epochs /* = 1 */, int batch_size /* = 1 */, double learning_rate /* = 0.7 */, double momentum /* = 0.1 */) {
 	pair<ARRAY_3D, ARRAY_2D> p;
-	ARRAY_3D avg_derivative, prev_deltas;
+	ARRAY_3D avg_derivative, prev_weight_deltas;
 	ARRAY_2D avg_bias_derivative, prev_bias_deltas;
 
         for (int epoch = 0; epoch < num_epochs; ++epoch) {
 	    random_shuffle(samples.begin(), samples.end()); // Shuffle so batches are random
+            initialize_weight_deltas(prev_weight_deltas);
+            initialize_bias_deltas(prev_bias_deltas);
 
 	    for (int i = 0; i < samples.size(); i += batch_size) {
 	    	/* Perform gradient descent on the batch to get the sum of derivatives. */
@@ -533,8 +540,7 @@ void NeuralNetwork::train(vector<pair<ARRAY, ARRAY>> samples, int num_epochs /* 
 	    	avg_bias_derivative = get<1>(p);
 
 	    	/* Update weights using gradient. */
-	    	prev_deltas = this->update_weights(avg_derivative, prev_deltas, learning_rate, momentum);
-                cout << "reached\n";
+	    	prev_weight_deltas = this->update_weights(avg_derivative, prev_weight_deltas, learning_rate, momentum);
 	    	prev_bias_deltas = this->update_bias_weights(avg_bias_derivative, prev_bias_deltas, learning_rate, momentum);
 
                 /* If using an adaptive learning rate and momentum, compute the next iteration. By default the below two

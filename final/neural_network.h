@@ -98,9 +98,9 @@ class NeuralNetwork {
 
 		// Helper functions
 
-		static void set_zero(ARRAY_2D &);
+                void initialize_weight_deltas(ARRAY_3D &);
 
-		static void set_zero(ARRAY_3D &);
+                void initialize_bias_deltas(ARRAY_2D &);
 
 		static void add_arrays(ARRAY_2D &, const ARRAY_2D &);
 
