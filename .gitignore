@@ -1,2 +1,5 @@
 final/mnist
+final/.tags
 *.out
+.idea/*
+CMakeLists.txt

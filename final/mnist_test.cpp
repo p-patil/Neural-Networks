@@ -41,7 +41,7 @@ int main() {
 
     cout << "Done.\nTraining... ";
 
-    net.train(samples, 30, 10, 0.5, 0);
+    net.train(samples, 40, 1, 0.1, 0);
 
     cout << "Done.\nReading test data... ";
 
@@ -74,6 +74,35 @@ int main() {
     }
 
     cout << "Done.\nAccuracy: " << (((double) correct_count) / test_data.size()) << endl;
+
+    cout << "Testing for overfitting on training data... ";
+
+    correct_count = 0;
+    for (int i = 0; i < training_data.size(); ++i) {
+        vector<double> input;
+        for (int j = 0; j < training_data[i].size(); ++j) {
+            input.push_back((double) training_data[i][j]);
+        }
+
+        vector<double> net_vector = net.feedforward(input);
+
+        got = 0;
+        net_val = net_vector[0];
+        for (int j = 1; j < net_vector.size(); ++j) {
+            if (net_vector[j] > net_val) {
+                got = j;
+                net_val = net_vector[j];
+            }
+        }
+
+        if (got == (int) training_labels[i]) {
+            ++correct_count;
+        }
+
+    }
+
+    cout << "Done.\nTraining data accuracy: " << (((double) correct_count) / training_data.size()) << endl;
+
     return 0;
 }
 

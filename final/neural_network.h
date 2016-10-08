@@ -96,28 +96,34 @@ class NeuralNetwork {
 
 		void set_bias_weight(int, int, double);
 
-		// Helper functions
+		// Utility functions
 
-                void initialize_weight_deltas(ARRAY_3D &);
+                static void initialize_weight_array(ARRAY_3D &, const NeuralNetwork &);
 
-                void initialize_bias_deltas(ARRAY_2D &);
+                static void initialize_bias_array(ARRAY_2D &, const NeuralNetwork &);
 
 		static void add_arrays(ARRAY_2D &, const ARRAY_2D &);
 
 		static void add_arrays(ARRAY_3D &, const ARRAY_3D &);
 
-		static double activation_function(double);
+                static double sigmoid(double);
 
-		static double activation_function_derivative_input(double);
+                static double sigmoid_derivative_input(double);
 
-		static double activation_function_derivative_output(double);
+                static double sigmoid_derivative(double);
+	        
+                static double quadratic_error(double, double);
 
-		static double error_function(const ARRAY &, const ARRAY &, int);
+                static double quadratic_error_derivative(double, double);
 
-                static double adapt_learning_rate(double);
+                static double step_decay(double, double);
 
-                static double adapt_momentum(double);
+                static double exponential_decay(double, double, double);
 
+                static double one_over_t_decay(double, double, double);
+
+                // Algorithm functions
+ 
 		ARRAY_2D backpropagate(const ARRAY &, const ARRAY &, const ARRAY_2D &) const;
 		
 		ARRAY_3D compute_derivatives(const ARRAY_2D &, const ARRAY_2D &) const;
@@ -130,7 +136,6 @@ class NeuralNetwork {
 
 		pair<ARRAY_3D, ARRAY_2D> gradient_descent(pair<ARRAY, ARRAY> *, int) const;
 
-
 		ARRAY_2D feedforward_and_get_outputs(const ARRAY &) const;
 
 	public:
@@ -138,7 +143,6 @@ class NeuralNetwork {
 		int *layer_counts; // Keeps track of number of neurons in each layer of the network
 		Neuron ***layers; // The layers of this network
 		BiasNeuron **bias_neurons; // Maps layers to bias neurons, used to simulate a threshold in the network
-
 
 		// Constructors
 
@@ -155,7 +159,19 @@ class NeuralNetwork {
 		ARRAY feedforward(const ARRAY &) const;
 		
 		void train(vector<pair<ARRAY, ARRAY>>, int = 1, int = 1, double = 0.7, double = 0.1);
-		
+	
+        double activation_function(double) const;
+
+        double activation_function_derivative(double) const;
+
+        double error_function(double, double) const;
+
+        double error_function_derivative(double, double) const;
+
+        double adapt_learning_rate(double, int) const;
+
+        double adapt_momentum(double, int) const;
+                
 		// Other
 
 		~NeuralNetwork(void);
